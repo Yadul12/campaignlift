@@ -34,6 +34,19 @@ docker compose exec -T backend pytest -v
 - **Web Application**: http://localhost:3048
 - **FastAPI OpenAPI Docs**: http://localhost:8048/docs
 - **PostgreSQL**: `localhost:5448` (`campaignlift` / `campaignlift_dev_pw`)
+- **GitHub Repository**: https://github.com/Yadul12/campaignlift
+
+---
+
+## Vercel Deployment (Dual-Mode Cloud Runtime)
+
+CampaignLift supports two deployment modes out of the box:
+
+1. **Zero-Config Vercel Serverless Mode**:
+   - `python -m analytics.export_vercel_snapshot` exports the full 108-campaign PostgreSQL summary, 108 campaign detail drawers, 108 RCT & Observational experiment workbenches, multi-dimensional `campaign × segment × channel` and `campaign × route` OLAP cubes, 4 out-of-time ML model evaluations, 200 scored customer cohorts, all 8 live SQL query outputs & `EXPLAIN (ANALYZE)` plans, and pre-rendered PDF/Excel report artifacts into `frontend/src/data/snapshot/campaignlift_snapshot.json`.
+   - On Vercel (`frontend` root directory, `API_INTERNAL_URL` unset), the Next.js App Router catch-all route (`frontend/src/app/api/v1/[[...slug]]/route.ts` + `frontend/src/lib/snapshotEngine.ts`) dynamically computes every filter, search, sort, multi-campaign comparison, sample-size power curve, budget simulation, SQL execution, and CSV/Excel/PDF download directly in serverless functions.
+2. **Full Live Docker / Cloud PostgreSQL + FastAPI Mode**:
+   - Whenever `API_INTERNAL_URL` is set (e.g., `http://backend:8000` in Docker Compose or a hosted FastAPI URL), `/api/v1/[[...slug]]/route.ts` proxies all requests live to FastAPI and PostgreSQL 16.
 
 ---
 
