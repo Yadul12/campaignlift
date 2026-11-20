@@ -1,0 +1,24 @@
+# Dependencies & Virtual Environments
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Next.js build artifacts
+frontend/.next/
+frontend/out/
+*.tsbuildinfo
+
+# Local env & OS files
+.env
+.env.local
+.env.*.local
+.DS_Store
+Thumbs.db
+*.log
+
+# Vercel local state
+.vercel/
+frontend/.vercel/

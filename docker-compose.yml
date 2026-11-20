@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: campaignlift-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-campaignlift}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-campaignlift_dev_pw}
+      POSTGRES_DB: ${POSTGRES_DB:-campaignlift}
+    ports:
+      - "${POSTGRES_PORT:-5448}:5432"
+    volumes:
+      - campaignlift_pgdata:/var/lib/postgresql/data
+      - ./database/migrations:/migrations:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-campaignlift} -d ${POSTGRES_DB:-campaignlift}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: campaignlift-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-campaignlift}:${POSTGRES_PASSWORD:-campaignlift_dev_pw}@postgres:5432/${POSTGRES_DB:-campaignlift}
+      DATA_GENERATION_SEED: ${DATA_GENERATION_SEED:-20260401}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      MIGRATIONS_DIR: /app/database/migrations
+      SQL_ANALYTICS_DIR: /app/database/sql_analytics
+    volumes:
+      - ./database:/app/database:ro
+      - ./backend/app:/app/app
+      - ./backend/analytics:/app/analytics
+      - ./backend/tests:/app/tests
+    ports:
+      - "8048:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: campaignlift-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      API_INTERNAL_URL: http://backend:8000
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8048
+    ports:
+      - "3048:3000"
+
+volumes:
+  campaignlift_pgdata:
