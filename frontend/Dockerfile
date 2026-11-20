@@ -5,6 +5,7 @@ RUN npm install
 COPY . .
 ARG API_INTERNAL_URL=http://backend:8000
 ENV API_INTERNAL_URL=$API_INTERNAL_URL
+ENV DOCKER_BUILD=true
 RUN npm run build
 
 FROM node:22-alpine AS runner
